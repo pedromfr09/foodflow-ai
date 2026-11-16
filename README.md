@@ -1,5 +1,9 @@
 # FoodFlow AI — Operations Copilot
 
+**[Demonstração interativa (GitHub Pages)](https://pedromfr09.github.io/foodflow-ai/)** · [Estudo de caso](docs/CASE_STUDY.md) · [Relatório de exemplo](docs/SAMPLE_REPORT.md)
+
+> O endereço do GitHub Pages é o previsto para este repositório; a publicação do site deve ser conferida no navegador.
+
 **Dashboard, agente de IA com ferramentas, API e automação de relatórios para operações de delivery.**
 
 > **Portfolio / independent demo.**  Os dados fornecidos no repositório são **100% sintéticos**. Nenhum ganho operacional ou economia de horas em ambiente real foi medido.
@@ -40,7 +44,7 @@ flowchart TB
 
 Abra `index.html` com dois cliques no navegador. É uma **vitrine offline interativa**, com filtros, gráficos, ranking, alertas e exportação JSON. A lógica dessa vitrine é JavaScript local; o app principal, com funcionalidades de Python/Claude, está em `app.py`.
 
-Para criar um link público rapidamente: suba o repositório ao GitHub → **Settings → Pages → Deploy from a branch → main / (root)**. O GitHub Pages exibirá `index.html`. Coloque a URL pública de Pages no topo deste README após verificar o link.
+Esta vitrine está preparada para publicação via **GitHub Pages → Deploy from a branch → main / (root)**. O link da demonstração está no topo do README; confirme que o Pages foi ativado e que a página carrega normalmente.
 
 # Executar em 5 passos (Windows / PowerShell)
 
@@ -113,9 +117,9 @@ O arquivo `foodflow/agent.py` implementa um **ciclo de ferramentas** com o SDK A
 
 **Importante:** a integração externa ao Claude não foi executada durante os testes locais sem credencial; em entrevista, demonstre apenas se você tiver testado com sua própria conta.
 
-# Automação / n8n
+# Automação
 
-# Automação imediatamente utilizável (sem n8n)
+## Automação executável sem n8n
 
 ```bash
 python -m foodflow.automation --input data/sample_orders.csv --out reports
@@ -123,7 +127,7 @@ python -m foodflow.automation --input data/sample_orders.csv --out reports
 
 O comando gera `reports/analise.json` e `reports/resumo.md`. Você pode agendá-lo pelo Agendador de Tarefas do Windows ou via cron. É uma execução real, mas **não equivale a provar economia de horas na produção**.
 
-### Automação no n8n (template opcional)
+## Automação no n8n (template opcional)
 
 Importe `automation/n8n_foodflow_daily_digest.json` no n8n. O fluxo possui **Schedule Trigger → HTTP Request → Code**, consultando a API e construindo o resumo. Configure a URL da API de acordo com o n8n (Docker: `host.docker.internal`; n8n fora de Docker: `127.0.0.1`) e valide manualmente o workflow. O arquivo é um exemplo de integração e **não foi executado em um servidor n8n aqui**. Nenhuma notificação é enviada por padrão.
 
@@ -161,9 +165,10 @@ foodflow-ai/
 ├── automation/n8n_foodflow_daily_digest.json
 ├── data/sample_orders.csv
 ├── docs/CASE_STUDY.md
-├── docs/ENTREVISTA.md
+├── docs/SAMPLE_REPORT.md
 ├── tests/
 ├── requirements.txt
+├── .gitignore
 └── README.md
 ```
 
