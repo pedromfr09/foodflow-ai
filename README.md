@@ -4,6 +4,8 @@
 
 **Dashboard, agente de IA com ferramentas, API e automação de relatórios para operações de delivery.**
 
+**Integração real validada em 16/11/2026:** Claude executou `get_kpis` e retornou as três contagens corretas em um smoke test local com 1.200 pedidos sintéticos. Veja a [evidência auditada](docs/CLAUDE_VALIDATION.md) e o [histórico de debugging](docs/CLAUDE_INVESTIGATION.md). Não houve implantação em produção.
+
 > **Portfolio / independent demo.**  Os dados fornecidos no repositório são **100% sintéticos**. Nenhum ganho operacional ou economia de horas em ambiente real foi medido.
 
 # Problema de negócio
@@ -20,7 +22,7 @@ Equipes operacionais precisam detectar atrasos e cancelamentos, identificar rest
 | Relatório exportável | Markdown + JSON | Testado |
 | API JSON | FastAPI, validação + Swagger | Testado |
 | Robô de relatório | CLI, pronto para agendamento externo | Testado |
-| Agente conversacional | Claude API + quatro ferramentas read-only | Implementado; necessita chave API para teste real |
+| Agente conversacional | Claude API + quatro ferramentas read-only | Smoke test real com `get_kpis` aprovado; demais fluxos têm validação parcial ou local |
 | Fluxo n8n | Exemplo de importação e consulta à API | Modelo fornecido; precisa validar no n8n local |
 
 # Arquitetura
@@ -113,21 +115,25 @@ Para integração, `POST /analyze` aceita as seguintes colunas (veja `data/sampl
 
 O arquivo `foodflow/agent.py` implementa um **ciclo de ferramentas** com o SDK Anthropic (não é somente um prompt genérico). O modelo pode solicitar chamadas `get_kpis`, `rank_restaurants`, `get_restaurant_details` e `get_recommended_actions`. As funções são executadas localmente e as respostas voltam ao modelo; cada consulta fica registrada na interface. O loop é limitado a cinco rodadas, e as ferramentas são read-only.
 
-**Importante:** a integração externa ao Claude não foi executada durante os testes locais sem credencial; em entrevista, demonstre apenas se você tiver testado com sua própria conta.
+**Evidência:** uma execução real local do Claude concluiu o ciclo `get_kpis → resultado Python → resposta final`, com números conferidos e `stop_reason=end_turn`. Testes automatizados usam SDK simulado e não consomem API. O teste simples não comprova consultas complexas, qualidade de recomendações ou operação em produção.
 
-## Validação real do agente Claude (uma chamada com rastreabilidade)
+## Validação real do agente Claude (uma consulta com rastreabilidade)
 
 O agente é opcional e precisa de uma **Anthropic API key** com acesso à API, separada de assinaturas do chat Claude. Nunca publique a chave, cole-a em issues, commits ou envie-a por mensagens.
 
 Na raiz do repositório, após instalar `requirements.txt`, execute:
 
 ```powershell
-python -m scripts.verify_claude_agent
+python -m scripts.verify_claude_agent --prompt-key
 ```
 
-A chave será solicitada no terminal sem aparecer na tela (ou lida da variável local `ANTHROPIC_API_KEY`). O script faz uma pergunta real ao Claude com base em pedidos sintéticos e registra a resposta e o rastro das ferramentas em **`reports/claude_validation.md`**, que fica fora do Git por padrão. O modelo padrão é `claude-sonnet-5-5`, ajustável com `--model` caso sua conta disponibilize outro modelo.
+A chave será solicitada sem eco em um terminal privado interativo; se a entrada oculta não estiver disponível, o script aborta. `--prompt-key` ignora a variável `ANTHROPIC_API_KEY`; sem essa opção, a variável pode ser usada. Não execute em terminal com transcrição ou gravação. Uma consulta pode fazer **até cinco requisições pagas**, sem retries automáticos. O script registra resposta, resultados das ferramentas, modelo retornado, tokens e motivo de parada em **`reports/claude_validation.md`**, fora do Git por padrão. O modelo padrão é `claude-sonnet-5-5`, ajustável com `--model`.
 
-O relatório local só é gerado depois da chamada real. **Não existe validação real comprovada no repositório até esse comando ser executado e o resultado ser revisado.** Se quiser divulgar a evidência, confira os valores e copie seletivamente o conteúdo não sensível para `docs/`, informando que são dados sintéticos e teste de integração, não desempenho em produção.
+Um relatório existente bloqueia outra execução: revise e arquive a evidência antes de autorizar nova chamada paga. `PASSOU` exige ferramentas sem erros e resposta final com `stop_reason=end_turn`; ainda é necessário conferir os números. O uso de ferramentas é solicitado no prompt, com `tool_choice=auto`, compatível com o Sonnet 5.5. Veja a [documentação do modelo](https://platform.claude.com/docs/en/models/sonnet-5-5/whats-new-sonnet-5-5).
+
+O CLI agora usa uma pergunta simples de contagens, no máximo duas requisições e 512 tokens de saída por requisição. Os limites são configuráveis com `--max-requests` (2–5) e `--max-tokens` (128–4096). No Sonnet 5.5, o agente usa `thinking=between_tools` e esforço `low` para reduzir o consumo de raciocínio antes do texto final. Para preservar o relatório anterior, uma próxima tentativa aprovada pode usar `--output reports/claude_validation_simple.md`. Veja a [investigação offline da validação parcial](docs/CLAUDE_INVESTIGATION.md).
+
+O relatório contém um marcador antes da chamada e só recebe o resultado após a resposta da API. Os relatórios brutos permanecem privados em `reports/`. A [evidência pública sanitizada](docs/CLAUDE_VALIDATION.md) documenta o teste aprovado e seus limites; o [histórico técnico](docs/CLAUDE_INVESTIGATION.md) preserva o diagnóstico da execução anterior incompleta.
 
 # Automação
 
@@ -150,7 +156,7 @@ python -m pip install -r requirements-dev.txt
 python -m pytest -q
 ```
 
-Cobertura de testes inclui geração reproduzível, contagens, indicadores, CSV inválido, duplicatas, cancelamentos, chamadas de ferramentas e três endpoints da API.
+Cobertura de testes inclui geração reproduzível, contagens, indicadores, CSV inválido, duplicatas, cancelamentos, três endpoints da API e o ciclo do agente com SDK simulado: ferramentas, erros, truncamento, raciocínio sem texto final, limites de requisições e relatórios. Os testes não fazem chamadas pagas à Anthropic.
 
 # Métricas / limitações
 

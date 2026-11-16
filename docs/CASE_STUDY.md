@@ -27,7 +27,7 @@ Cenário simulado: uma equipe de operações de delivery recebe planilhas de ped
 ## Evidências e limites de validação
 - Testes automatizados para métricas, validação de dados e endpoints estão disponíveis em `tests/`. Execute `python -m pytest -q` para reproduzir os resultados no seu ambiente.
 - A versão `index.html` é uma demonstração interativa estática, com processamento no navegador; não executa o backend Python.
-- A integração com a API externa do Claude **não estava validada com credenciais reais** na preparação inicial do MVP.
+- A integração com Claude passou em um smoke test real local em 16/11/2026: `get_kpis`, retorno Python e resposta final com as contagens conferidas. A [evidência sanitizada](CLAUDE_VALIDATION.md) delimita o resultado; a [investigação técnica](CLAUDE_INVESTIGATION.md) registra a correção de um truncamento anterior. Consultas complexas e produção permanecem sem validação completa.
 - O workflow n8n é um **template**, não uma automação comprovadamente implantada.
 - Nenhum ganho de produtividade, ROI ou economia de horas em produção foi medido.
 
