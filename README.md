@@ -2,8 +2,6 @@
 
 **[Demonstração interativa (GitHub Pages)](https://pedromfr09.github.io/foodflow-ai/)** · [Estudo de caso](docs/CASE_STUDY.md) · [Relatório de exemplo](docs/SAMPLE_REPORT.md)
 
-> O endereço do GitHub Pages é o previsto para este repositório; a publicação do site deve ser conferida no navegador.
-
 **Dashboard, agente de IA com ferramentas, API e automação de relatórios para operações de delivery.**
 
 > **Portfolio / independent demo.**  Os dados fornecidos no repositório são **100% sintéticos**. Nenhum ganho operacional ou economia de horas em ambiente real foi medido.
@@ -44,7 +42,7 @@ flowchart TB
 
 Abra `index.html` com dois cliques no navegador. É uma **vitrine offline interativa**, com filtros, gráficos, ranking, alertas e exportação JSON. A lógica dessa vitrine é JavaScript local; o app principal, com funcionalidades de Python/Claude, está em `app.py`.
 
-Esta vitrine está preparada para publicação via **GitHub Pages → Deploy from a branch → main / (root)**. O link da demonstração está no topo do README; confirme que o Pages foi ativado e que a página carrega normalmente.
+A demonstração está publicada pelo GitHub Pages; o link está no topo deste README. O site mostra uma interface estática, não executa o serviço Python ou o agente Claude.
 
 # Executar em 5 passos (Windows / PowerShell)
 
@@ -117,6 +115,20 @@ O arquivo `foodflow/agent.py` implementa um **ciclo de ferramentas** com o SDK A
 
 **Importante:** a integração externa ao Claude não foi executada durante os testes locais sem credencial; em entrevista, demonstre apenas se você tiver testado com sua própria conta.
 
+## Validação real do agente Claude (uma chamada com rastreabilidade)
+
+O agente é opcional e precisa de uma **Anthropic API key** com acesso à API, separada de assinaturas do chat Claude. Nunca publique a chave, cole-a em issues, commits ou envie-a por mensagens.
+
+Na raiz do repositório, após instalar `requirements.txt`, execute:
+
+```powershell
+python -m scripts.verify_claude_agent
+```
+
+A chave será solicitada no terminal sem aparecer na tela (ou lida da variável local `ANTHROPIC_API_KEY`). O script faz uma pergunta real ao Claude com base em pedidos sintéticos e registra a resposta e o rastro das ferramentas em **`reports/claude_validation.md`**, que fica fora do Git por padrão. O modelo padrão é `claude-sonnet-5-5`, ajustável com `--model` caso sua conta disponibilize outro modelo.
+
+O relatório local só é gerado depois da chamada real. **Não existe validação real comprovada no repositório até esse comando ser executado e o resultado ser revisado.** Se quiser divulgar a evidência, confira os valores e copie seletivamente o conteúdo não sensível para `docs/`, informando que são dados sintéticos e teste de integração, não desempenho em produção.
+
 # Automação
 
 ## Automação executável sem n8n
@@ -168,6 +180,7 @@ foodflow-ai/
 ├── docs/SAMPLE_REPORT.md
 ├── tests/
 ├── requirements.txt
+├── scripts/verify_claude_agent.py
 ├── .gitignore
 └── README.md
 ```
