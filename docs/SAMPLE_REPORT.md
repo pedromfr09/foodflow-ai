@@ -40,6 +40,6 @@ Período: 2026-10-01 a 2026-10-15
 
 ## Limitações
 
-- Dados de demonstração não refletem a operação real do iFood.
+- Dados de demonstração não refletem a operação real de um negócio.
 - As regras de alerta são heurísticas e precisam ser calibradas e validadas.
 - Nenhuma recomendação é executada automaticamente.
