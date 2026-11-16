@@ -33,7 +33,7 @@ def call_tool(name: str, args: dict[str, Any], df: pd.DataFrame) -> Any:
     return {"error": "Ferramenta não autorizada."}
 
 
-def run_agent(question: str, df: pd.DataFrame, api_key: str, model: str = "claude-sonnet-4-5") -> dict[str, Any]:
+def run_agent(question: str, df: pd.DataFrame, api_key: str, model: str = "claude-sonnet-5-5") -> dict[str, Any]:
     """Four-step bounded tool loop, read-only; no external side effects or persistent conversations."""
     if not api_key or not api_key.strip():
         raise ValueError("Configure uma chave de API Anthropic para conversar com o agente.")
