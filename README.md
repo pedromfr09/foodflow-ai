@@ -1,14 +1,14 @@
-# 🍽️ FoodFlow AI — Operations Copilot
+# FoodFlow AI — Operations Copilot
 
 **Dashboard, agente de IA com ferramentas, API e automação de relatórios para operações de delivery.**
 
-> **Portfolio / independent demo.** Este projeto não é oficial, afiliado ou integrado ao iFood. Os dados fornecidos no repositório são **100% sintéticos**. Nenhum ganho operacional ou economia de horas em ambiente real foi medido.
+> **Portfolio / independent demo.**  Os dados fornecidos no repositório são **100% sintéticos**. Nenhum ganho operacional ou economia de horas em ambiente real foi medido.
 
-## 🎯 Problema de negócio
+# Problema de negócio
 
 Equipes operacionais precisam detectar atrasos e cancelamentos, identificar restaurantes que merecem atenção e transformar planilhas de pedidos em decisões rastreáveis. Fazer isso manualmente consome tempo e pode dispersar a priorização.
 
-## ✅ O que foi construído
+# O que foi construído
 
 | Recurso | Implementação | Situação |
 |---|---|---|
@@ -21,7 +21,7 @@ Equipes operacionais precisam detectar atrasos e cancelamentos, identificar rest
 | Agente conversacional | Claude API + quatro ferramentas read-only | Implementado; necessita chave API para teste real |
 | Fluxo n8n | Exemplo de importação e consulta à API | Modelo fornecido; precisa validar no n8n local |
 
-## 🧩 Arquitetura
+# Arquitetura
 
 ```mermaid
 flowchart TB
@@ -36,13 +36,13 @@ flowchart TB
 
 **Guarda-corpos:** sem ações externas por parte do agente, ferramentas somente de leitura, validação dos CSVs, limites por lote, identificadores fictícios, distinção entre observações e hipóteses.
 
-## ⚡ Visualização instantânea (sem instalar nada)
+# Visualização instantânea (sem instalar nada)
 
 Abra `index.html` com dois cliques no navegador. É uma **vitrine offline interativa**, com filtros, gráficos, ranking, alertas e exportação JSON. A lógica dessa vitrine é JavaScript local; o app principal, com funcionalidades de Python/Claude, está em `app.py`.
 
 Para criar um link público rapidamente: suba o repositório ao GitHub → **Settings → Pages → Deploy from a branch → main / (root)**. O GitHub Pages exibirá `index.html`. Coloque a URL pública de Pages no topo deste README após verificar o link.
 
-## 🚀 Executar em 5 passos (Windows / PowerShell)
+# Executar em 5 passos (Windows / PowerShell)
 
 ```powershell
 # 1. Dentro da pasta foodflow-ai
@@ -65,7 +65,7 @@ streamlit run app.py
 
 A interface **funciona sem Anthropic API key** para explorar dados, gerar alertas e exportar relatórios. Para conversar com o agente, obtenha uma chave de API na plataforma Anthropic e informe-a apenas no campo de senha da barra lateral; o aplicativo não a grava. A assinatura do chat Claude não inclui necessariamente créditos de API. O nome do modelo é configurável na interface, para evitar incompatibilidade com sua conta.
 
-### 💡 Tour sugerido para demonstração de 60 segundos
+# Tour sugerido para demonstração de 60 segundos
 
 1. Abra o dashboard: 1.200 pedidos sintéticos, dez restaurantes.
 2. Mostre os KPIs de cancelamento e atraso e o ranking por prioridade.
@@ -74,7 +74,7 @@ A interface **funciona sem Anthropic API key** para explorar dados, gerar alerta
 5. Baixe o relatório; depois mostre `/docs` da FastAPI.
 6. **Somente se tiver uma chave funcional:** pergunte ao agente “Quais lojas devo priorizar e por quê?”, expanda o trace de ferramentas.
 
-## 🌐 API
+# API
 
 Inicie um segundo terminal, no diretório raiz, com o ambiente ativado:
 
@@ -107,15 +107,15 @@ Para integração, `POST /analyze` aceita as seguintes colunas (veja `data/sampl
 - `order_value_brl`: valor positivo em reais
 - `status`: `delivered` ou `cancelled`
 
-## 🤖 Agente: como funciona de verdade
+# Agente: como funciona de verdade
 
 O arquivo `foodflow/agent.py` implementa um **ciclo de ferramentas** com o SDK Anthropic (não é somente um prompt genérico). O modelo pode solicitar chamadas `get_kpis`, `rank_restaurants`, `get_restaurant_details` e `get_recommended_actions`. As funções são executadas localmente e as respostas voltam ao modelo; cada consulta fica registrada na interface. O loop é limitado a cinco rodadas, e as ferramentas são read-only.
 
 **Importante:** a integração externa ao Claude não foi executada durante os testes locais sem credencial; em entrevista, demonstre apenas se você tiver testado com sua própria conta.
 
-## 🔁 Automação / n8n
+# Automação / n8n
 
-### Automação imediatamente utilizável (sem n8n)
+# Automação imediatamente utilizável (sem n8n)
 
 ```bash
 python -m foodflow.automation --input data/sample_orders.csv --out reports
@@ -127,7 +127,7 @@ O comando gera `reports/analise.json` e `reports/resumo.md`. Você pode agendá-
 
 Importe `automation/n8n_foodflow_daily_digest.json` no n8n. O fluxo possui **Schedule Trigger → HTTP Request → Code**, consultando a API e construindo o resumo. Configure a URL da API de acordo com o n8n (Docker: `host.docker.internal`; n8n fora de Docker: `127.0.0.1`) e valide manualmente o workflow. O arquivo é um exemplo de integração e **não foi executado em um servidor n8n aqui**. Nenhuma notificação é enviada por padrão.
 
-## 🧪 Testes
+# Testes
 
 ```bash
 python -m pip install -r requirements-dev.txt
@@ -136,7 +136,7 @@ python -m pytest -q
 
 Cobertura de testes inclui geração reproduzível, contagens, indicadores, CSV inválido, duplicatas, cancelamentos, chamadas de ferramentas e três endpoints da API.
 
-## 📊 Métricas / limitações
+# Métricas / limitações
 
 - A **taxa de atraso** utiliza apenas os pedidos entregues (não os cancelados).
 - O **atraso médio positivo** mede `max(actual_minutes - promised_minutes, 0)` sobre todos os pedidos entregues.
@@ -147,7 +147,7 @@ Cobertura de testes inclui geração reproduzível, contagens, indicadores, CSV 
 - Não envie dados pessoais ou operacionais sigilosos para o demo ou para APIs de terceiros.
 - Antes de disponibilizar a API publicamente, implemente autenticação, limitação de requisições e governança de dados.
 
-## 📁 Estrutura
+# Estrutura
 
 ```text
 foodflow-ai/
@@ -167,8 +167,5 @@ foodflow-ai/
 └── README.md
 ```
 
-## 👤 Autoria e desenvolvimento
-
-Projeto de portfólio em AI Builder, desenvolvido com assistência de IA para acelerar prototipação e implementação. As decisões de escopo, definição do problema de negócio, validação de resultados e apresentação devem ser verificadas pelo responsável antes de divulgá-lo como experiência pessoal.
 
 **Próximas etapas de evolução:** autenticação, webhook com dados reais autorizados, persistência, testes end-to-end do agente, métricas de valor/tempo economizado e validação de alertas com usuários.
