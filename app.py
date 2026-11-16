@@ -25,7 +25,7 @@ with st.sidebar:
     uploaded = st.file_uploader("Carregue pedidos (.csv)", type="csv", help="Use o mesmo esquema do arquivo data/sample_orders.csv")
     st.markdown("**Assistente de IA (opcional)**")
     api_key = st.text_input("Anthropic API key", value=os.environ.get("ANTHROPIC_API_KEY", ""), type="password", help="Chave de API paga, independente da assinatura do Claude. Não armazenada pelo aplicativo.")
-    model = st.text_input("Modelo", value=os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-5"))
+    model = st.text_input("Modelo", value=os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-5-5"))
     st.caption("Sem chave, as métricas, alertas e relatórios funcionam normalmente.")
 
 try:
