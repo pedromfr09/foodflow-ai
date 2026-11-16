@@ -33,32 +33,68 @@ def call_tool(name: str, args: dict[str, Any], df: pd.DataFrame) -> Any:
     return {"error": "Ferramenta não autorizada."}
 
 
-def run_agent(question: str, df: pd.DataFrame, api_key: str, model: str = "claude-sonnet-5-5") -> dict[str, Any]:
-    """Four-step bounded tool loop, read-only; no external side effects or persistent conversations."""
+def run_agent(question: str, df: pd.DataFrame, api_key: str, model: str = "claude-sonnet-5-5",
+              *, max_requests: int = 5, max_tokens: int = 1000) -> dict[str, Any]:
+    """Bounded requests, read-only tools; never retry or resume truncation automatically."""
     if not api_key or not api_key.strip():
         raise ValueError("Configure uma chave de API Anthropic para conversar com o agente.")
     if not question.strip() or len(question) > 2000:
         raise ValueError("Pergunta obrigatória, com no máximo 2.000 caracteres.")
+    if not 2 <= max_requests <= 5 or not 128 <= max_tokens <= 4096:
+        raise ValueError("Use 2 a 5 requisições e 128 a 4096 tokens por requisição.")
     try:
         import anthropic
     except ImportError as exc:
         raise RuntimeError("Instale a dependência 'anthropic' antes de ativar o agente.") from exc
-    client = anthropic.Anthropic(api_key=api_key, timeout=30.0, max_retries=1)
+    client = anthropic.Anthropic(api_key=api_key, timeout=30.0, max_retries=0)
     messages: list[dict[str, Any]] = [{"role": "user", "content": question}]
     trace: list[dict[str, Any]] = []
-    for step in range(5):
+    requests: list[dict[str, Any]] = []
+    # Sonnet 5.5 defaults to adaptive/high, which can consume the entire output
+    # budget before producing text. This setting is model-specific, not disabled.
+    options = ({"thinking": {"type": "between_tools"},
+                "output_config": {"effort": "low"}}
+               if model == "claude-sonnet-5-5" else {})
+    settings = {"max_requests": max_requests, "max_tokens": max_tokens, **options}
+
+    def finish(text: str, reason: str) -> dict[str, Any]:
+        return {"answer": text, "trace": trace, "requests": requests,
+                "complete": reason == "completed", "completion_reason": reason,
+                "settings": settings, "provider": "Anthropic Claude"}
+
+    for step in range(max_requests):
         response = client.messages.create(
             model=model,
-            max_tokens=1000,
+            max_tokens=max_tokens,
             system=SYSTEM_PROMPT,
             tools=TOOL_SCHEMAS,
-            tool_choice={"type": "any"} if step == 0 else {"type": "auto"},
+            tool_choice={"type": "auto"},
             messages=messages,
+            **options,
         )
+        requests.append({
+            "step": step + 1, "message_id": response.id, "model": response.model,
+            "stop_reason": response.stop_reason,
+            "usage": response.usage.model_dump(exclude_none=True),
+            "content_block_types": [block.type for block in response.content],
+        })
         tool_calls = [block for block in response.content if block.type == "tool_use"]
-        if not tool_calls:
+        if response.stop_reason != "tool_use" or not tool_calls:
             text = "\n".join(block.text for block in response.content if block.type == "text")
-            return {"answer": text or "Nenhuma resposta textual foi retornada.", "trace": trace, "provider": "Anthropic Claude"}
+            if response.stop_reason != "end_turn":
+                reason = ("missing_tool_use_blocks" if response.stop_reason == "tool_use"
+                          else response.stop_reason or "unknown_stop_reason")
+            elif tool_calls:
+                reason = "unexpected_tool_use_blocks"
+            elif not text.strip():
+                reason = "empty_answer"
+            elif not trace:
+                reason = "no_tools_executed"
+            elif not all(item["success"] for item in trace):
+                reason = "tool_error"
+            else:
+                reason = "completed"
+            return finish(text, reason)
         messages.append({"role": "assistant", "content": [block.model_dump(exclude_none=True) for block in response.content]})
         tool_results = []
         for block in tool_calls:
@@ -66,7 +102,12 @@ def run_agent(question: str, df: pd.DataFrame, api_key: str, model: str = "claud
                 result = call_tool(block.name, block.input or {}, df)
             except (TypeError, ValueError) as exc:
                 result = {"error": str(exc)}
-            trace.append({"step": step + 1, "tool": block.name, "input": block.input})
-            tool_results.append({"type": "tool_result", "tool_use_id": block.id, "content": json.dumps(result, ensure_ascii=False)})
+            failed = isinstance(result, dict) and "error" in result
+            trace.append({"step": step + 1, "tool_use_id": block.id,
+                          "tool": block.name, "input": block.input,
+                          "success": not failed, "result": result})
+            tool_results.append({"type": "tool_result", "tool_use_id": block.id,
+                                 "is_error": failed, "content": json.dumps(result, ensure_ascii=False)})
         messages.append({"role": "user", "content": tool_results})
-    return {"answer": "Limite de etapas do agente alcançado. Reformule com uma pergunta mais específica.", "trace": trace, "provider": "Anthropic Claude"}
+    return finish("Limite de etapas do agente alcançado. Reformule com uma pergunta mais específica.",
+                  "request_limit")
