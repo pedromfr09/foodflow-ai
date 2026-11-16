@@ -1,0 +1,35 @@
+{
+  "name": "FoodFlow AI - Daily Operational Digest (demo template)",
+  "nodes": [
+    {
+      "parameters": {"rule": {"interval": [{"field": "days", "triggerAtHour": 9}]}},
+      "id": "schedule-foodflow",
+      "name": "Every Morning",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {"method": "GET", "url": "http://host.docker.internal:8000/demo-analysis", "options": {}},
+      "id": "fetch-foodflow",
+      "name": "Call FoodFlow API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {"jsCode": "const k = $json.kpis; const alerts = $json.alerts || []; return [{json: {subject: 'FoodFlow Daily Operations', body: `Pedidos: ${k.total_orders} | Cancelamentos: ${k.cancellation_rate_pct}% | Atrasos: ${k.late_rate_pct}% | Alertas: ${alerts.length}`, alerts, source: 'Synthetic data - demo only'}}];"},
+      "id": "digest-foodflow",
+      "name": "Compose Digest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    }
+  ],
+  "connections": {
+    "Every Morning": {"main": [[{"node": "Call FoodFlow API", "type": "main", "index": 0}]]},
+    "Call FoodFlow API": {"main": [[{"node": "Compose Digest", "type": "main", "index": 0}]]}
+  },
+  "active": false,
+  "settings": {"executionOrder": "v1"}
+}
