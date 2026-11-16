@@ -88,7 +88,7 @@ with tab3:
                     with st.expander("Ver chamadas de ferramentas"):
                         st.json(result["trace"])
                 except Exception as exc:
-                    st.error(f"Não foi possível executar a chamada à API: {type(exc).__name__}: {exc}")
+                    st.error(f"Não foi possível executar a chamada à API ({type(exc).__name__}). Confira o modelo, a conexão e o acesso à API.")
     st.code("GET /demo-analysis\nPOST /analyze\nGET /health", language="http")
 with tab4:
     st.subheader("Exportar resultados e conectar automações")
